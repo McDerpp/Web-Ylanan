@@ -18,6 +18,7 @@ CREATE TABLE `colleges` (
   `collshortname` VARCHAR(20) NOT NULL,
   PRIMARY KEY (`collid`),
   UNIQUE KEY `idx_collfullname` (`collfullname`)
+  MODIFY `collid` INT NOT NULL AUTO_INCREMENT;
 );
 
 -- Create `departments` table
@@ -33,6 +34,8 @@ CREATE TABLE `departments` (
      ON DELETE NO ACTION
      ON UPDATE NO ACTION
 );
+
+
 
 -- Create `programs` table
 CREATE TABLE `programs` (

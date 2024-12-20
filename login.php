@@ -21,7 +21,7 @@ try {
 
         if ($user && password_verify($password, $user['password'])) {
             $_SESSION['username'] = $username;
-            header("Location: dashboard.php");
+            header("Location: student_dashboard.php.php");
             exit;
         } else {
             echo "Invalid login details.";
