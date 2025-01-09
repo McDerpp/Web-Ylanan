@@ -1,17 +1,44 @@
+<?php
+include '../header.php';
+
+if (!isset($_SESSION['username'])) {
+    header("Location: login.php");
+    exit;
+}
+
+$dsn = "mysql:host=localhost;dbname=usjr-jsp1b40;charset=utf8";
+$username = "root";
+$password = "1234";
+
+try {
+    $conn = new PDO($dsn, $username, $password);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    $sql = "SELECT 
+                collid, 
+                collfullname, 
+                collshortname 
+            FROM colleges";
+    $stmt = $conn->query($sql);
+    $colleges = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die("Connection failed: " . $e->getMessage());
+}
+?>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Entry</title>
-    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../css/entry.css">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 
 <body>
     <div class="container">
         <h2>New Student Entry</h2>
-        <div id="message"><?php echo $message; ?></div>
 
         <form id="studentForm" method="POST">
             <label for="student_id">Student ID:</label>
@@ -44,7 +71,7 @@
             <div class="buttons">
                 <input type="submit" value="Save">
                 <button type="reset">Clear Entries</button>
-                <button type="button" onclick="window.location.href='student_dashboard.php';">Cancel</button>
+                <button type="button" onclick="window.location.href='student/student_dashboard.php';">Cancel</button>
             </div>
         </form>
         <div id="response"></div>

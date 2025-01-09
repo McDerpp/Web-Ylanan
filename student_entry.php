@@ -1,107 +1,54 @@
-<?php
-include '../header.php';
-include 'student_edit.php';
-
-
-
-if (!isset($_SESSION['username'])) {
-    header("Location: login.php");
-    exit;
-}
-
-$dsn = "mysql:host=localhost;dbname=usjr-jsp1b40;charset=utf8";
-$username = "root";
-$password = "1234";
-
-try {
-    $conn = new PDO($dsn, $username, $password);
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-    $sql = "SELECT 
-                student_id, 
-                last_name, 
-                first_name, 
-                middle_name, 
-                college, 
-                program, 
-                year 
-            FROM students";
-    $stmt = $conn->query($sql);
-    $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
-}
-?>
-
-<!DOCTYPE html>
 <html lang="en">
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> <!-- Axios CDN -->
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Students Dashboard</title>
-    <link rel="stylesheet" href="../css/dashboards.css">
-    <link rel="stylesheet" href="../css/modal.css">
-
-
-    <style>
-        .modal.active {
-            display: block;
-        }
-    </style>
+    <title>Student Entry</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 
 <body>
     <div class="container">
-        <div class="dashBoardTitle">
-            <h2>Students Dashboard</h2>
+        <h2>New Student Entry</h2>
+        <div id="message"><?php echo $message; ?></div>
 
-        </div>
-        <button onclick="window.location.href='student_entry.php'" class="btn-new-entry">New Student Entry</button>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Last Name</th>
-                    <th>First Name</th>
-                    <th>Middle Name</th>
-                    <th>College</th>
-                    <th>Program</th>
-                    <th>Year</th>
-                    <th class="actions-header">Actions</th>
+        <form id="studentForm" method="POST">
+            <label for="student_id">Student ID:</label>
+            <input type="text" id="student_id" name="student_id" required>
 
+            <label for="first_name">First Name:</label>
+            <input type="text" id="first_name" name="first_name" required>
 
+            <label for="middle_name">Middle Name:</label>
+            <input type="text" id="middle_name" name="middle_name">
 
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($students as $student): ?>
-                    <tr id="student-<?php echo $student['student_id']; ?>">
-                        <td><?php echo htmlspecialchars($student['student_id']); ?></td>
-                        <td><?php echo htmlspecialchars($student['last_name']); ?></td>
-                        <td><?php echo htmlspecialchars($student['first_name']); ?></td>
-                        <td><?php echo htmlspecialchars($student['middle_name']); ?></td>
-                        <td><?php echo htmlspecialchars($student['college']); ?></td>
-                        <td><?php echo htmlspecialchars($student['program']); ?></td>
-                        <td><?php echo htmlspecialchars($student['year']); ?></td>
-                        <td>
-                            <button class="btn-edit" data-id="<?php echo $student['student_id']; ?>"
-                                data-lastname="<?php echo htmlspecialchars($student['last_name']); ?>"
-                                data-firstname="<?php echo htmlspecialchars($student['first_name']); ?>"
-                                data-middlename="<?php echo htmlspecialchars($student['middle_name']); ?>"
-                                data-college="<?php echo htmlspecialchars($student['college']); ?>"
-                                data-program="<?php echo htmlspecialchars($student['program']); ?>"
-                                data-year="<?php echo htmlspecialchars($student['year']); ?>">Edit</button>
-                            <button class="btn-delete" data-id="<?php echo $student['student_id']; ?>"
-                                onclick="deleteStudent(this)">Delete</button>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+            <label for="last_name">Last Name:</label>
+            <input type="text" id="last_name" name="last_name" required>
+
+            <label for="college">College:</label>
+            <select id="college" name="college" required>
+                <option value="" disabled selected>Select College</option>
+
+            </select>
+
+            <label for="program">Program:</label>
+            <select id="program" name="program" required>
+                <option value="" disabled selected>Select Program</option>
+                <!-- Populate programs dynamically (if necessary) -->
+            </select>
+
+            <label for="year">Year:</label>
+            <input type="text" id="year" name="year" required>
+
+            <div class="buttons">
+                <input type="submit" value="Save">
+                <button type="reset">Clear Entries</button>
+                <button type="button" onclick="window.location.href='student_dashboard.php';">Cancel</button>
+            </div>
+        </form>
+        <div id="response"></div>
     </div>
-
 
     <script>
         let colleges = {}; // Global variable to store colleges data
@@ -115,56 +62,7 @@ try {
 
 
 
-        const modal = document.getElementById('edit-modal');
-
-        function closeModal() {
-            modal.classList.remove('active');
-            overlay.classList.remove('active');
-        }
-
-        function deleteStudent(button) {
-            const studentId = button.dataset.id;
-
-            if (confirm('Are you sure you want to delete this student?')) {
-                // Send GET request to delete student using axios
-                axios.get(`student_api.php?id=${studentId}`)
-                    .then(response => {
-                        const data = response.data;
-                        alert(data.message);
-                        if (data.message === 'Student deleted successfully.') {
-                            // Remove the student row from the table
-                            const row = document.getElementById(`student-${studentId}`);
-                            row.parentNode.removeChild(row);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('An error occurred while trying to delete the student.');
-                    });
-            }
-        }
-
-        function editStudent(button) {
-            const id = button.dataset.id;
-            const lastname = button.dataset.lastname;
-            const firstname = button.dataset.firstname;
-            const middlename = button.dataset.middlename;
-            const college = button.dataset.college;
-            const program = button.dataset.program;
-            const year = button.dataset.year;
-
-            document.getElementById('edit-id').value = id;
-            document.getElementById('edit-lastname').value = lastname;
-            document.getElementById('edit-firstname').value = firstname;
-            document.getElementById('edit-middlename').value = middlename;
-            // document.getElementById('edit-college').value = college;
-            // document.getElementById('edit-program').value = program;
-            document.getElementById('edit-year').value = year;
-
-            modal.classList.add('active');
-            overlay.classList.add('active');
-        }
-
+        // Function to load colleges from the server
         function loadColleges() {
             axios.get('student_api.php', {
                 params: {
@@ -191,6 +89,8 @@ try {
                     console.error('Error loading colleges:', error);
                 });
         }
+
+
 
         function loadPrograms(progFullName) {
 
@@ -243,6 +143,7 @@ try {
 
 
 
+        // Handle the event when a college is selected
         function onCollegeChange(event) {
             const selectedCollegeId = event.target.value;
             loadPrograms(selectedCollegeId);
@@ -273,43 +174,6 @@ try {
         }
 
 
-
-        document.querySelectorAll('.btn-edit').forEach(button => {
-            button.addEventListener('click', function () {
-                editStudent(this);
-            });
-        });
-
-        document.getElementById('edit-form').addEventListener('submit', function (e) {
-            e.preventDefault();  // Prevents the default form submission
-
-            const formData = new FormData(this);
-
-            // Add the 'edit' flag to indicate this is an update, not a new entry
-            formData.append('edit', true);  // Add the edit flag
-
-            // Get the student ID from the form (or some other source)
-            // For debugging: check what is being sent in the form data
-            formData.forEach((value, key) => {
-                console.log(`${key}: ${value}`);
-            });
-            const studentId = formData.get("student_id");  // Ensure you have an input with this id
-            console.log("student id", studentId);
-
-            // Use axios to send the form data with the studentId in the URL
-            axios.post(`student_api.php?id=${studentId}`, formData)
-                .then(response => {
-                    const data = response.data;
-                    alert(data.message);
-                    if (data.message === 'Student information updated successfully.') {
-                        location.reload();  // Reload to show updated data
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while updating the student.');
-                });
-        });
 
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -365,8 +229,9 @@ try {
 
 
 
-        });
 
+
+        });
     </script>
 </body>
 

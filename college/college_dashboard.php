@@ -1,5 +1,7 @@
 <?php
-session_start();
+include '../header.php';
+include 'college_edit.php';
+
 
 if (!isset($_SESSION['username'])) {
     header("Location: login.php");
@@ -33,134 +35,12 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Colleges Dashboard</title>
-    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../css/dashboards.css">
+    <link rel="stylesheet" href="../css/modal.css">
+
     <style>
-        /* Modal styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgb(0, 0, 0);
-            background-color: rgba(0, 0, 0, 0.4);
-            padding-top: 60px;
-        }
 
-        .modal-content {
-            background-color: #fefefe;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-        }
 
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        /* Adjust container size and add scroll */
-        .container {
-            width: 80%;
-            /* Adjust the width to your preference */
-            max-height: 600px;
-            /* Set a max height for the container */
-            overflow-y: auto;
-            /* Enable vertical scrolling */
-            margin: 0 auto;
-            /* Center the container */
-            padding: 20px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            background-color: #f9f9f9;
-            border-radius: 8px;
-        }
-
-        /* Style for the table inside the container */
-        table {
-            width: 100%;
-            height: 50;
-            border-collapse: collapse;
-        }
-
-        table th,
-        table td {
-            padding: 8px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-
-        table th {
-            background-color: #f2f2f2;
-        }
-
-        /* Adjust button appearance */
-        .btn-new-entry,
-        .btn-edit,
-        .btn-delete {
-            padding: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-
-        .btn-new-entry {
-            margin-bottom: 20px;
-        }
-
-        .btn-edit {
-            background-color: #ff9800;
-        }
-
-        .btn-delete {
-            background-color: #f44336;
-        }
-
-        .btn-logout {
-            padding: 10px;
-            background-color: #f44336;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-        }
-
-        /* Make the modal content smaller */
-        .modal-content {
-            width: 50%;
-            /* Adjust the width of the modal */
-        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
@@ -168,12 +48,12 @@ try {
 
 <body>
     <div class="container">
-        <div class="header">
+        <div class="dashBoardTitle">
             <h2>Colleges Dashboard</h2>
-            <div class="user-info">
+            <!-- <div class="user-info">
                 <span>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</span>
                 <a href="logout.php" class="btn-logout">Logout</a>
-            </div>
+            </div> -->
         </div>
         <button onclick="window.location.href='college_entry.php'" class="btn-new-entry">New College Entry</button>
 
@@ -183,7 +63,8 @@ try {
                     <th>ID</th>
                     <th>Full Name</th>
                     <th>Short Name</th>
-                    <th>Actions</th> <!-- New column for Edit/Delete -->
+                    <th class="actions-header">Actions</th>
+
                 </tr>
             </thead>
 
@@ -212,26 +93,7 @@ try {
         </table>
     </div>
 
-    <!-- Modal for editing college details -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h3>Edit College</h3>
-            <form id="edit-form" action="college_api.php" method="PUT">
-                <input type="hidden" name="collid" id="modalCollId">
-                <div class="form-group">
-                    <label for="collfullname">Full Name</label>
-                    <input type="text" id="modalCollFullname" name="collfullname" required>
-                </div>
-                <div class="form-group">
-                    <label for="collshortname">Short Name</label>
-                    <input type="text" id="modalCollShortname" name="collshortname" required>
-                </div>
-                <button type="submit" class="btn-save">Save</button>
 
-            </form>
-        </div>
-    </div>
 
     <script>
         // Function to open the modal
@@ -242,12 +104,6 @@ try {
             document.getElementById("editModal").style.display = "block";
         }
 
-        // Function to close the modal
-        function closeModal() {
-            document.getElementById("editModal").style.display = "none";
-        }
-
-
 
         // Close modal after updating college
         function closeModal() {
@@ -255,29 +111,43 @@ try {
         }
 
         function deleteCollege(collid) {
-    if (confirm('Are you sure you want to delete this college?')) {
-        // Send a POST request using Axios
-        axios.post('college_api.php', {
-            collid: collid
-        })
-        .then(function (response) {
-            if (response.data.status === 'success') {
-                alert(response.data.message);
-                // Remove the deleted college row from the table
-                const row = document.getElementById('college-row-' + collid);
-                if (row) {
-                    row.remove();  // Remove the row from the DOM
-                }
-            } else {
-                alert(response.data.message);
+            if (confirm('Are you sure you want to delete this college?')) {
+                // Send a POST request using Axios
+                axios.post('college_api.php', {
+                    collid: collid
+                })
+                    .then(function (response) {
+                        if (response.data.status === 'success') {
+                            alert(response.data.message);
+                            // Remove the deleted college row from the table
+                            const row = document.getElementById('college-row-' + collid);
+                            if (row) {
+                                row.remove();  // Remove the row from the DOM
+                            }
+                        } else {
+                            alert(response.data.message);
+                        }
+                    })
+                    .catch(function (error) {
+                        console.error('Error object:', error);
+
+                        if (error.response) {
+                            // The server responded with a status code outside the 2xx range
+                            console.error('Server responded with:', error.response.data);
+                            alert(error.response.data.message || 'Error occurred on the server.');
+                        } else if (error.request) {
+                            // No response was received
+                            console.error('No response received:', error.request);
+                            alert('No response from server. Please check the network connection.');
+                        } else {
+                            // Other errors (e.g., axios setup issues)
+                            console.error('Error setting up request:', error.message);
+                            alert('An unexpected error occurred: ' + error.message);
+                        }
+                    });
+
             }
-        })
-        .catch(function (error) {
-            console.error('Error deleting college:', error);
-            alert('There was an error deleting the college.');
-        });
-    }
-}
+        }
 
 
 
@@ -288,7 +158,7 @@ try {
 
 
 
-        
+
 
         document.getElementById('edit-form').addEventListener('submit', function (event) {
             event.preventDefault();

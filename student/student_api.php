@@ -12,7 +12,8 @@ try {
 }
 
 // Save student
-function save_student($conn) {    
+function save_student($conn)
+{
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Ensure all necessary fields are present
         if (isset($_POST['student_id'], $_POST['first_name'], $_POST['middle_name'], $_POST['last_name'], $_POST['college'], $_POST['program'], $_POST['year'])) {
@@ -38,7 +39,8 @@ function save_student($conn) {
 }
 
 // Delete student
-function delete_student($conn) {
+function delete_student($conn)
+{
     if (isset($_GET['id'])) {
         $student_id = $_GET['id']; // Get the student ID from the query string
 
@@ -56,7 +58,8 @@ function delete_student($conn) {
 }
 
 // Edit student
-function edit_student($conn) {
+function edit_student($conn)
+{
     if (isset($_POST['student_id'], $_POST['first_name'], $_POST['middle_name'], $_POST['last_name'], $_POST['college'], $_POST['program'], $_POST['year'])) {
         $student_id = $_POST['student_id'];
         $first_name = $_POST['first_name'];
@@ -83,17 +86,19 @@ function edit_student($conn) {
 
 
 // Get college data
-function get_college($conn) {
+function get_college($conn)
+{
     $stmt = $conn->query("SELECT collid, collfullname FROM colleges");
     $colleges = $stmt->fetchAll(PDO::FETCH_ASSOC);
     echo json_encode($colleges);
 }
 
 // Get program data based on the college name
-function get_program($conn) {
+function get_program($conn)
+{
     if (isset($_GET['progFullName'])) {
         $progFullName = $_GET['progFullName'];  // Get the college full name
-        
+
         $stmt = $conn->prepare("SELECT progid, progfullname, progcollid FROM programs WHERE progcollid IN 
                                 (SELECT collid FROM colleges WHERE collfullname = :progFullName)");
         $stmt->bindParam(':progFullName', $progFullName, PDO::PARAM_STR);
@@ -114,8 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Otherwise, it's a save request (new student entry)
         save_student($conn);
     }
-}
-elseif ($_SERVER['REQUEST_METHOD'] == 'GET') {
+} elseif ($_SERVER['REQUEST_METHOD'] == 'GET') {
     $type = $_GET['type'] ?? ''; // Safely get the 'type' parameter
 
     if ($type == 'colleges') {

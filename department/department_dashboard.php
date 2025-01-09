@@ -1,3 +1,33 @@
+<?php
+include '../header.php';
+include 'department_edit.php';
+
+
+if (!isset($_SESSION['username'])) {
+    header("Location: login.php");
+    exit;
+}
+
+$dsn = "mysql:host=localhost;dbname=usjr-jsp1b40;charset=utf8";
+$username = "root";
+$password = "1234";
+
+try {
+    $conn = new PDO($dsn, $username, $password);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    $sql = "SELECT 
+                collid, 
+                collfullname, 
+                collshortname 
+            FROM colleges";
+    $stmt = $conn->query($sql);
+    $colleges = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die("Connection failed: " . $e->getMessage());
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5,107 +35,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Departments Dashboard</title>
-    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../css/dashboards.css">
+    <link rel="stylesheet" href="../css/modal.css">
+
     <style>
-        .container {
-            width: 80%;
-            max-height: 600px;
-            overflow-y: auto;
-            margin: 0 auto;
-            padding: 20px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            background-color: #f9f9f9;
-            border-radius: 8px;
-        }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-
-        table th,
-        table td {
-            padding: 8px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-
-        table th {
-            background-color: #f2f2f2;
-        }
-
-        /* Modal styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1000;
-            background: white;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            width: 400px;
-        }
-
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-        }
-
-        .modal-header {
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-
-        .modal-actions {
-            margin-top: 20px;
-            text-align: right;
-        }
-
-        .btn-close {
-            background: #f44336;
-            color: white;
-            padding: 5px 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .btn-save {
-            background: #4CAF50;
-            color: white;
-            padding: 5px 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 
 <body>
     <div class="container">
-        <div class="header">
+        <div class="dashBoardTitle">
             <h2>Departments Dashboard</h2>
-            <div class="user-info">
-                <span>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</span>
-                <a href="logout.php" class="btn-logout">Logout</a>
-            </div>
+
         </div>
         <button onclick="window.location.href='department_entry.php'" class="btn-new-entry">New Department
             Entry</button>
 
-        <!-- College Dropdown -->
         <label for="college">College:</label>
         <select id="college" name="college" required>
             <option value="" disabled selected>Select College</option>
@@ -117,42 +64,16 @@
                     <th>Department ID</th>
                     <th>Full Name</th>
                     <th>Short Name</th>
-                    <th>Actions</th>
+                    <th class="actions-header">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- Department rows will be inserted here dynamically -->
             </tbody>
         </table>
     </div>
 
-    <!-- Modal -->
-    <div class="modal-overlay" id="modal-overlay"></div>
-    <div class="modal" id="edit-modal">
-        <div class="modal-header">Edit Department</div>
-        <form id="edit-form">
-            <label for="edit-deptid">Department ID:</label>
-            <input type="text" id="edit-deptid" required>
-            <label for="edit-deptfullname">Full Name:</label>
-            <input type="text" id="edit-deptfullname" required>
-            <br><br>
-            <label for="edit-deptshortname">Short Name:</label>
-            <input type="text" id="edit-deptshortname" required>
-            <label for="edit-college">College:</label>
-            <select id="edit-college" name="edit-college" required>
-                <option value="" disabled selected>Select College</option>
-            </select>
-
-
-            <div class="modal-actions">
-                <button type="button" class="btn-close" onclick="closeModal()">Cancel</button>
-                <button type="submit" class="btn-save">Save Changes</button>
-            </div>
-        </form>
-    </div>
 
     <script>
-        // Function to load colleges from the server
         function loadColleges() {
             axios.get('../student/student_api.php', {
                 params: {
@@ -241,7 +162,7 @@
                     })
                     .catch(function (error) {
                         console.error('Error deleting department:', error);
-                        alert('Failed to delete department.');
+                        alert('Programs associated with this department exist. Delete those programs first.');
                     });
             }
         }
@@ -258,15 +179,13 @@
             document.getElementById('edit-deptshortname').value = shortname;
 
             // Show the modal
-            document.getElementById('modal-overlay').style.display = 'block';
-            document.getElementById('edit-modal').style.display = 'block';
+            document.getElementById('editModal').style.display = 'block';
         }
 
 
         // Function to close the modal
         function closeModal() {
-            document.getElementById('modal-overlay').style.display = 'none';
-            document.getElementById('edit-modal').style.display = 'none';
+            document.getElementById('editModal').style.display = 'none';
         }
 
         // Event listener for form submission
@@ -308,6 +227,12 @@
             const collegeSelect = document.getElementById('college');
             collegeSelect.addEventListener('change', onCollegeChange);
         });
+
+        window.onclick = function (event) {
+            if (event.target == document.getElementById("editModal")) {
+                closeModal();
+            }
+        }
     </script>
 </body>
 

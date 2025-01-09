@@ -1,5 +1,5 @@
 <?php
-session_start();
+include '../header.php';
 
 if (!isset($_SESSION['username'])) {
     header("Location: login.php");
@@ -14,11 +14,13 @@ try {
     $conn = new PDO($dsn, $username, $password);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Fetch colleges to populate the college dropdown
-    $collegesQuery = "SELECT collid, collfullname FROM colleges";
-    $collegesStmt = $conn->query($collegesQuery);
-    $colleges = $collegesStmt->fetchAll(PDO::FETCH_ASSOC);
-
+    $sql = "SELECT 
+                collid, 
+                collfullname, 
+                collshortname 
+            FROM colleges";
+    $stmt = $conn->query($sql);
+    $colleges = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     die("Connection failed: " . $e->getMessage());
 }
@@ -31,7 +33,7 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>New Program Entry</title>
-    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../css/entry.css">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         /* Styles for form layout */
@@ -89,18 +91,18 @@ try {
                         college_id: collegeId
                     }
                 })
-                .then(function (response) {
-                    var departments = response.data;
-                    departments.forEach(function (department) {
-                        var option = document.createElement('option');
-                        option.value = department.deptid;
-                        option.text = department.deptfullname;
-                        deptSelect.appendChild(option);
+                    .then(function (response) {
+                        var departments = response.data;
+                        departments.forEach(function (department) {
+                            var option = document.createElement('option');
+                            option.value = department.deptid;
+                            option.text = department.deptfullname;
+                            deptSelect.appendChild(option);
+                        });
+                    })
+                    .catch(function (error) {
+                        console.error('Error fetching departments:', error);
                     });
-                })
-                .catch(function (error) {
-                    console.error('Error fetching departments:', error);
-                });
             }
         }
 
@@ -108,7 +110,7 @@ try {
         document.getElementById('progcollid').addEventListener('change', fetchDepartments);
 
         // Handle form submission via AJAX
-        document.getElementById('programForm').addEventListener('submit', function(event) {
+        document.getElementById('programForm').addEventListener('submit', function (event) {
             event.preventDefault();
 
             var formData = new FormData(this);

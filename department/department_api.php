@@ -26,7 +26,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     }
 
     try {
-        // Query the departments for the given college ID
         $stmt = $conn->prepare("
             SELECT deptid, deptfullname, deptshortname 
             FROM departments 
@@ -42,7 +41,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             exit;
         }
 
-        // Return the results as JSON
         http_response_code(200); // OK
         echo json_encode($departments);
     } catch (PDOException $e) {
